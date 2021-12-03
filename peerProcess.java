@@ -434,7 +434,7 @@ public class peerProcess {
 							}
 							int indexPiece = ByteBuffer.wrap(payload).getInt();
 							//System.out.println(peerId +" has requested piece " + indexPiece);
-							logFileObj.requestMessage(sourcePeerId, peerId, indexPiece);
+							logFileObj.receiveRequestdmessage(sourcePeerId, peerId, indexPiece);
 
 							//send the requested piece only if the peer is either unchoked or optimistically unchoked and if source peer has the piece
 							sendPieceMsg(indexPiece);					
