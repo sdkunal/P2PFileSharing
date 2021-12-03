@@ -20,10 +20,10 @@ public class Logs{
 		}
 	}
 	
-	public synchronized void log_readCommonFile(int id1, ConfigFile cfg) {
+	public synchronized void log_readCommonFile(int id1, CommonConfig cfg) {
 		String timeStamp = new SimpleDateFormat("y-M-d 'at' h:m:s a z").format(Calendar.getInstance().getTime());
 		StringBuffer log_entry = new StringBuffer();
-		log_entry.append(timeStamp + ": Peer ["+id1+"] read Common.cfg file. \n Variables set: Preferred Neighbours = "+cfg.getNoOfNeighbors() + " UnchokingInterval = "+cfg.getUnChokingInterval()+" Optimistic UnchokingInterval = "+cfg.getOptUnChokingInterval()+" File name= " + cfg.getFileName() + " File size = " + cfg.getFileSize()+ " Chunk size = " + cfg.getChunkSize());
+		log_entry.append(timeStamp + ": Peer ["+id1+"] read Common.cfg file. \n Variables set: Preferred Neighbours = "+cfg.getNumPreferredNeighbours() + " UnchokingInterval = "+cfg.getunchokingInterval()+" Optimistic UnchokingInterval = "+cfg.getOptimisticUnchokingInterval()+" File name= " + cfg.getFileName() + " File size = " + cfg.getFileSize()+ " Chunk size = " + cfg.getPieceSize());
 		try {
 			logWriter.write(log_entry.toString());
 			logWriter.newLine();
