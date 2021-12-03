@@ -24,8 +24,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class peerProcess {
-	private static ReadFiles rfObj = null;
-	private static ConfigFile configFileObj = null;
+	private static ReadInput rfObj = null;
+	private static CommonConfig configFileObj = null;
 	private static Map<Integer,NeighbourPeerNode> neighborPeers = new LinkedHashMap<>();
 	private static int sourcePeerId = -1;
 	private static ConcurrentHashMap<Integer,Integer> bitfieldHM = new ConcurrentHashMap<>();
@@ -129,11 +129,11 @@ public class peerProcess {
 				bitfield[i] = bitfieldHM.get(i);
 			}
 			byte[] payload = intArrayTobyteArray(bitfield);
-			byte[] message = getMessage(PeerConstants.messageType.BITFIELD.getValue(),payload);
+			byte[] message = getMessage(PeerConstants.message.BITFIELD.getValue(),payload);
 			try {
 				outputStream.write(message);
 				outputStream.flush();
-				logFileObj.log_bitfield_sent(sourcePeerId, peerId);
+				logFileObj.logSentbitfield(sourcePeerId, peerId);
 			}
 			catch(IOException ie) {
 				ie.printStackTrace();
@@ -141,7 +141,7 @@ public class peerProcess {
 		}
 
 		public synchronized void sendCompleteMsg() {
-			byte[] message = getMessage(PeerConstants.messageType.COMPLETE.getValue(),null);
+			byte[] message = getMessage(PeerConstants.message.COMPLETE.getValue(),null);
 			try {
 				outputStream.write(message);
 				outputStream.flush();
@@ -155,7 +155,7 @@ public class peerProcess {
 		//Don't send choke message if the peer is optimistically unchoked but remove it from unchoked_peers and set unchoked = false
 		public synchronized void sendChokeMsg() {
 			if(optimisticallyUnchokedPeer.get() != peerId) {
-				byte[] message = getMessage(PeerConstants.messageType.CHOKE.getValue(),null);
+				byte[] message = getMessage(PeerConstants.message.CHOKE.getValue(),null);
 				try {
 					outputStream.write(message);
 					outputStream.flush();
@@ -174,7 +174,7 @@ public class peerProcess {
 		}
 
 		public synchronized void sendUnChokeMsg(boolean isOptimistically) {
-			byte[] message = getMessage(PeerConstants.messageType.UNCHOKE.getValue(),null);
+			byte[] message = getMessage(PeerConstants.message.UNCHOKE.getValue(),null);
 			try {
 				outputStream.write(message);
 				outputStream.flush();
@@ -207,14 +207,14 @@ public class peerProcess {
 			boolean isInterested = checkIfPeerHasInterestingPieces();
 			byte[] message;
 			//send interested msg as peer has pieces that I don't have
-			message = isInterested ? getMessage(PeerConstants.messageType.INTERESTED.getValue(),null):getMessage(PeerConstants.messageType.NOT_INTERESTED.getValue(),null);		
+			message = isInterested ? getMessage(PeerConstants.message.INTERESTED.getValue(),null):getMessage(PeerConstants.message.NOT_INTERESTED.getValue(),null);		
 			try {
 				outputStream.write(message);
 				if(isInterested) {
-					logFileObj.log_send_interested_message(sourcePeerId, peerId);
+					logFileObj.interestedMessage(sourcePeerId, peerId);
 				}
 				else {
-					logFileObj.log_send_not_interested_message(sourcePeerId, peerId);
+					logFileObj.notInterestedmessage(sourcePeerId, peerId);
 				}
 				outputStream.flush();
 			}catch(IOException ie) {
@@ -248,10 +248,10 @@ public class peerProcess {
 			if(randomChunkIdx != -1) {
 				ByteBuffer bb = ByteBuffer.allocate(4);
 				byte[] payload = bb.putInt(randomChunkIdx).array();
-				byte[] message = getMessage(PeerConstants.messageType.REQUEST.getValue(),payload);
+				byte[] message = getMessage(PeerConstants.message.REQUEST.getValue(),payload);
 				try {
 					outputStream.write(message);
-					logFileObj.log_send_request_message(sourcePeerId, peerId, randomChunkIdx);
+					logFileObj.requestMessage(sourcePeerId, peerId, randomChunkIdx);
 					outputStream.flush();
 				}catch(IOException ie) {
 					ie.printStackTrace();
@@ -266,15 +266,15 @@ public class peerProcess {
 		public synchronized void sendPieceMsg(int pieceIndex) {
 			if((unchoked || (optimisticallyUnchokedPeer.get() == peerId)) && bitfieldHM.get(pieceIndex) == 1) {
 				try {
-					byte[] piece = utilObj.returnPiece(sourcePeerId, pieceIndex);
+					byte[] piece = utilObj.returnRequestPiece(sourcePeerId, pieceIndex);
 					ByteBuffer bb = ByteBuffer.allocate(4);
 					byte[] index = bb.putInt(pieceIndex).array();
 					byte[] payload = new byte[index.length+piece.length];
 					System.arraycopy(index, 0, payload, 0, index.length);
 					System.arraycopy(piece, 0, payload, 4, piece.length);
-					byte[] pieceMsg = getMessage(PeerConstants.messageType.PIECE.getValue(),payload);
+					byte[] pieceMsg = getMessage(PeerConstants.message.PIECE.getValue(),payload);
 					outputStream.write(pieceMsg);
-					logFileObj.log_send_piece_message(sourcePeerId, peerId, pieceIndex);
+					logFileObj.requestPiece(sourcePeerId, peerId, pieceIndex);
 					outputStream.flush();
 				}catch(IOException ie){
 					ie.printStackTrace();
@@ -285,11 +285,11 @@ public class peerProcess {
 		public synchronized void sendHaveMsg(int pieceIndex) {
 			ByteBuffer bb = ByteBuffer.allocate(4);
 			byte[] payload = bb.putInt(pieceIndex).array();
-			byte[] message = getMessage(PeerConstants.messageType.HAVE.getValue(),payload);
+			byte[] message = getMessage(PeerConstants.message.HAVE.getValue(),payload);
 			try {
 				outputStream.write(message);
 				outputStream.flush();
-				logFileObj.log_send_have_message(sourcePeerId, peerId, pieceIndex);
+				logFileObj.haveMessage(sourcePeerId, peerId, pieceIndex);
 			}catch(IOException ie) {
 				ie.printStackTrace();
 			}
@@ -307,7 +307,7 @@ public class peerProcess {
 			if(bitfieldHM.get(havePieceIndex) == 0) {
 				ByteBuffer bb = ByteBuffer.allocate(4);
 				byte[] payload = bb.putInt(havePieceIndex).array();
-				byte[] message = getMessage(PeerConstants.messageType.REQUEST.getValue(),payload);
+				byte[] message = getMessage(PeerConstants.message.REQUEST.getValue(),payload);
 				try {
 					outputStream.write(message);
 					outputStream.flush();
@@ -372,7 +372,7 @@ public class peerProcess {
 						//System.out.println("type of message = " + type);
 
 						//if type = Bitfield
-						if(type == PeerConstants.messageType.BITFIELD.getValue()) {
+						if(type == PeerConstants.message.BITFIELD.getValue()) {
 							byte[] bytes = new byte[size-1];
 							for(int i = 0;i<size-1;i++) {
 								inputStream.read(bytes, i, 1);
@@ -381,7 +381,7 @@ public class peerProcess {
 							peerNode.setBitfield(peer_bitfield);
 							//if peer has full file, then increase peersWithEntireFile
 							boolean hasFullFile = true;
-							logFileObj.log_bitfield_received(sourcePeerId, peerId);
+							logFileObj.logReceivebitfield(sourcePeerId, peerId);
 							for(int i=0;i<peer_bitfield.length;i++) {
 								if(peer_bitfield[i] == 0) {
 									hasFullFile = false;
@@ -396,16 +396,16 @@ public class peerProcess {
 								sendInterestedorNotMsg();//send interested message since the peer has full file
 							}
 						}
-						else if(type == PeerConstants.messageType.INTERESTED.getValue()) {
+						else if(type == PeerConstants.message.INTERESTED.getValue()) {
 							//System.out.println(peerId +" Interested");
 							interested_peers.addIfAbsent(peerId);
-							logFileObj.log_receiving_interested_message(sourcePeerId, peerId);
+							logFileObj.receiveInterestedmessage(sourcePeerId, peerId);
 						}
 						//if the peer sends not interested message, then remove it from interested_peerslist and choke it.
-						else if(type == PeerConstants.messageType.NOT_INTERESTED.getValue()) {
+						else if(type == PeerConstants.message.NOT_INTERESTED.getValue()) {
 							int index = interested_peers.indexOf(peerId);
 							if(index != -1) {
-								logFileObj.log_receiving_not_interested_message(sourcePeerId, peerId);
+								logFileObj.receiveNotinterestedMessage(sourcePeerId, peerId);
 								interested_peers.remove(index);
 							}				
 							if(peerId == optimisticallyUnchokedPeer.get()) {
@@ -413,18 +413,18 @@ public class peerProcess {
 							}
 							sendChokeMsg();
 						}
-						else if(type == PeerConstants.messageType.CHOKE.getValue()) {
+						else if(type == PeerConstants.message.CHOKE.getValue()) {
 							//System.out.println(peerId +" has choked me");
-							logFileObj.log_choking(sourcePeerId, peerId);
+							logFileObj.Choking(sourcePeerId, peerId);
 
 						}
-						else if(type == PeerConstants.messageType.UNCHOKE.getValue()) {
+						else if(type == PeerConstants.message.UNCHOKE.getValue()) {
 							//send request message if peer has some interesting piece that I don't have else do nothing
 							//System.out.println(peerId +" has unchoked me");
-							logFileObj.log_unchoking(sourcePeerId, peerId);
+							logFileObj.Unchoking(sourcePeerId, peerId);
 							sendRequestMsg(); 
 						}
-						else if(type == PeerConstants.messageType.REQUEST.getValue()) {
+						else if(type == PeerConstants.message.REQUEST.getValue()) {
 
 							interested_peers.addIfAbsent(peerId);
 							//get the index of the requested piece from the payload
@@ -434,13 +434,13 @@ public class peerProcess {
 							}
 							int indexPiece = ByteBuffer.wrap(payload).getInt();
 							//System.out.println(peerId +" has requested piece " + indexPiece);
-							logFileObj.log_receiving_request_message(sourcePeerId, peerId, indexPiece);
+							logFileObj.requestMessage(sourcePeerId, peerId, indexPiece);
 
 							//send the requested piece only if the peer is either unchoked or optimistically unchoked and if source peer has the piece
 							sendPieceMsg(indexPiece);					
 						}
 						//Received piece, write it to the file, update my bitfield, check if u have completed downloading the file. If no then send request message to this peer and send have message to all the peers
-						else if(type == PeerConstants.messageType.PIECE.getValue()) {
+						else if(type == PeerConstants.message.PIECE.getValue()) {
 							byte[] piece = new byte[size-5];
 							byte[] indexArr = new byte[4];
 							for(int i = 0;i<4;i++) {
@@ -455,7 +455,7 @@ public class peerProcess {
 								for(int i=0;i<piece.length;i++) {
 									inputStream.read(piece, i, 1);
 								}
-								utilObj.writePiece(sourcePeerId, indexOfPieceRecvd, piece);
+								utilObj.writeReceivedPiece(sourcePeerId, indexOfPieceRecvd, piece);
 								boolean haveICompleted = true;
 								int numberOfPiecesIHave = 0;
 								for(Map.Entry<Integer, Integer> e:bitfieldHM.entrySet()) {
@@ -466,16 +466,16 @@ public class peerProcess {
 										numberOfPiecesIHave++;
 									}
 								}
-								logFileObj.log_downloading_a_piece(sourcePeerId, peerId, indexOfPieceRecvd, numberOfPiecesIHave);
+								logFileObj.getPiece(sourcePeerId, peerId, indexOfPieceRecvd, numberOfPiecesIHave);
 								//check if I have completed the full file, if yes increment peersWithEntireFile
 								if(haveICompleted && !completed_peers.contains(sourcePeerId)) {
 									completed_peers.add(sourcePeerId);
 									peersWithEntireFile.incrementAndGet(); //check if I have completed the download of file fully 
 									System.out.println(sourcePeerId +" (I) have completed downloading");
 									complete_file = true;
-									logFileObj.log_completion_of_download(sourcePeerId);
+									logFileObj.downloadComplete(sourcePeerId);
 									TimeUnit.SECONDS.sleep(2);
-									utilObj.joinChunksintoFile(sourcePeerId, configFileObj);
+									utilObj.combinePiecesintoFile(peerId, configFileObj);
 									//broadcast 'bitfield' message to all the peers	so that they can update their bitfield copy of ur bitfield 			
 									//									for(Map.Entry<Integer, NeighborPeerInteraction> entry:neighborPeerConnections.entrySet()) {
 									//										NeighborPeerInteraction npiObjAdjacentPeer = entry.getValue();
@@ -494,7 +494,7 @@ public class peerProcess {
 							}
 						}
 						//update neighbour peerbitfield, check if the peer has completed the file and update peersWithEntireFile accordingly
-						else if(type == PeerConstants.messageType.HAVE.getValue()) {
+						else if(type == PeerConstants.message.HAVE.getValue()) {
 							byte[] index = new byte[4];
 							for(int i=0;i<4;i++) {
 								inputStream.read(index, i, 1);
@@ -502,14 +502,14 @@ public class peerProcess {
 							int havePieceIndex = ByteBuffer.wrap(index).getInt();
 
 							if(havePieceIndex > -1) {
-								logFileObj.log_receiving_have_message(sourcePeerId, peerId, havePieceIndex);
+								logFileObj.receiveHavemessage(sourcePeerId, peerId, havePieceIndex);
 								updateNeighbourPeerBitfield(havePieceIndex);
 								checkForCompleteFile();
 							}
 
 						}
-						else if(type == PeerConstants.messageType.COMPLETE.getValue()) {
-							logFileObj.log_completion_of_process();
+						else if(type == PeerConstants.message.COMPLETE.getValue()) {
+							logFileObj.killPeerprocess();
 							System.exit(0);
 						}
 
@@ -558,13 +558,13 @@ public class peerProcess {
 
 		public void run() {
 
-			int unchokeInterval = configFileObj.getUnChokingInterval();
+			int unchokeInterval = configFileObj.getunchokingInterval();
 			try {
 				while(peersWithEntireFile.get() < totalPeers) {
 
 					int interestedPeersSize = interested_peers.size();
 					if(interestedPeersSize > 0) {
-						int preferredNeighbors = configFileObj.getNoOfNeighbors();
+						int preferredNeighbors = configFileObj.getNumPreferredNeighbours();
 
 						if(interestedPeersSize < preferredNeighbors) {
 							Iterator<Integer> itr = interested_peers.iterator();
@@ -599,7 +599,7 @@ public class peerProcess {
 								tempPeersList.remove(randomIdx);
 							}
 
-							logFileObj.log_change_of_preferred_neighbors(sourcePeerId, preferredPeers);
+							logFileObj.prefferedNeighbors(sourcePeerId, preferredPeers);
 
 							//choke the peers who have not been selected
 							Iterator<Integer> itr = tempPeersList.iterator();
@@ -630,7 +630,7 @@ public class peerProcess {
 			try {
 				while(peersWithEntireFile.get() < totalPeers) {
 					if(interested_peers.size() > 0) {
-						int optimisticSleepingInterval = configFileObj.getOptUnChokingInterval();
+						int optimisticSleepingInterval = configFileObj.getOptimisticUnchokingInterval();
 						int interestedPeersSize = interested_peers.size();
 						Random rand = new Random();
 						int random = rand.nextInt(interestedPeersSize); 
@@ -638,7 +638,7 @@ public class peerProcess {
 						optimisticallyUnchokedPeer.set(peerId);
 						NeighborPeerInteraction npiObj = neighborPeerConnections.get(peerId);
 						npiObj.sendUnChokeMsg(true);
-						logFileObj.log_change_of_optimistically_unchoked_neighbor(sourcePeerId, peerId);
+						logFileObj.optimisticUnchoking(sourcePeerId, peerId);
 						TimeUnit.SECONDS.sleep(optimisticSleepingInterval);
 						optimisticallyUnchokedPeer.set(-1);
 
@@ -692,7 +692,7 @@ public class peerProcess {
 						NeighborPeerInteraction npi = new NeighborPeerInteraction(socket,peerObj);
 						npi.startInteraction();
 						neighborPeerConnections.put(peerId, npi);
-						logFileObj.log_tcp_connection_to(sourcePeerId, peerId);
+						logFileObj.sourceTcpconnection(sourcePeerId, peerId);
 					}		
 					index++;
 					outputStream.flush();
@@ -738,7 +738,7 @@ public class peerProcess {
 					NeighborPeerInteraction npi = new NeighborPeerInteraction(socket,peerObj);
 					npi.startInteraction();
 					neighborPeerConnections.put(peerId, npi);
-					logFileObj.log_tcp_connection_from(sourcePeerId, peerId);
+					logFileObj.destinationTcpconnection(sourcePeerId, peerId);
 					index++;
 
 				}
@@ -784,21 +784,21 @@ public class peerProcess {
 		sourcePeerId = Integer.parseInt(args[0]);
 		//Read Common.cfg and set the ConfigFile object
 
-		rfObj = ReadFiles.getReadFilesObj();
-		List<String> configRows = rfObj.parseTheFile("Common.cfg");
-		configFileObj = ConfigFile.getConfigFileObject(configRows);
+		rfObj = ReadInput.getReadInputObj();
+		List<String> configRows = rfObj.parseInput("Common.cfg");
+		configFileObj = CommonConfig.getCommonConfigFileObj(configRows);
 		totalChunks = configFileObj.getNoOfChunks();
 		utilObj = new PeerCommonUtil();
 		//	System.out.println(configFileReader.getNoOfNeighbors());
 
 		//Read PeerInfo.cfg and set the PeerNode.java 
-		List<String> peerRows = rfObj.parseTheFile("PeerInfo.cfg");
+		List<String> peerRows = rfObj.parseInput("PeerInfo.cfg");
 		setPeerNodes(peerRows);
 
 		//make peer directory
-		File logFile = utilObj.makePeerAndLogDirectory(sourcePeerId);
+		File logFile = utilObj.directoryForLogandPeer(sourcePeerId);
 		logFileObj = new Logs(logFile);
-		logFileObj.log_readCommonFile(sourcePeerId, configFileObj);
+		logFileObj.readCommoncfg(sourcePeerId, configFileObj);
 
 		//current peer has file, set bitfield as true for all bits and split the file into chunks
 		int bit = 0;
@@ -807,8 +807,8 @@ public class peerProcess {
 			peersWithEntireFile.incrementAndGet(); //if I have the file initially
 			System.out.println(sourcePeerId +" (I) have the full file");
 			bit = 1;
-			utilObj.splitFileintoChunks(""+sourcePeerId, configFileObj);
-			utilObj.joinChunksintoFile(sourcePeerId, configFileObj);
+			utilObj.divideFileintoPieces(""+sourcePeerId, configFileObj);
+			utilObj.combinePiecesintoFile(sourcePeerId, configFileObj);
 		}
 
 		for(int i = 0;i<totalChunks;i++) {
@@ -845,7 +845,7 @@ public class peerProcess {
 
 				TimeUnit.SECONDS.sleep(10);
 				System.out.println("Correctly exiting");
-				logFileObj.log_completion_of_process();
+				logFileObj.killPeerprocess();
 				System.exit(0);
 			}
 			//			else {
