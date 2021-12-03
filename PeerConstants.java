@@ -7,22 +7,22 @@ public class PeerConstants {
 	public static final String HANDSHAKE_HEADER = "P2PFILESHARINGPROJ";
 	public static final String ZERO_BITS_HANDSHAKE = "0000000000";
 
-	public static enum messageType{
+	public static enum message{
 		CHOKE(0),UNCHOKE(1),INTERESTED(2),NOT_INTERESTED(3),HAVE(4),BITFIELD(5),REQUEST(6),PIECE(7),COMPLETE(8);
 
-		private final int type;
-		private static messageType[] messageTypes = values();
+		private final int theType;
+		private static message[] messageTypes = values();
 
-		private messageType(int msgType) {
-			this.type = msgType;
+		private message(int messType) {
+			this.theType = messType;
 		}
 
 		public int getValue() {
-			return this.type;
+			return this.theType;
 		}
 
-		public static messageType valueOf(int mType) {
-			for(messageType m : messageTypes) {
+		public static message valueOf(int mType) {
+			for(message m : messageTypes) {
 				if(m.getValue() == mType) {
 					return m;
 				}
@@ -30,5 +30,4 @@ public class PeerConstants {
 			return null;
 		}
 	}
-
 }
