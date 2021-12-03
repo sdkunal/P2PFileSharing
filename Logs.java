@@ -20,7 +20,7 @@ public class Logs{
 		}
 	}
 	
-	public synchronized void log_readCommonFile(int id1, CommonConfig cfg) {
+	public synchronized void readCommoncfg(int id1, CommonConfig cfg) {
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 		StringBuffer write_log = new StringBuffer();
 		write_log.append(timeStamp +" "+id1+" has read Common.cfg file.");
@@ -33,7 +33,7 @@ public class Logs{
 		}
 	}
 	
-	public synchronized void log_bitfield_received(int id1, int id2) {
+	public synchronized void logReceivebitfield(int id1, int id2) {
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 		StringBuffer write_log = new StringBuffer();
 		write_log.append(timeStamp + " " + id1 + " has received bitfield from " + id2 );
@@ -46,7 +46,7 @@ public class Logs{
 		}
 	}
 	
-	public synchronized void log_bitfield_sent(int id1, int id2) {
+	public synchronized void logSentbitfield(int id1, int id2) {
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 		StringBuffer write_log = new StringBuffer();
 		write_log.append(timeStamp + " " + id1 + " sent bitfield to " + id2 );
@@ -59,7 +59,7 @@ public class Logs{
 		}
 	}
 
-	public synchronized void log_tcp_connection_to(int id1, int id2){
+	public synchronized void sourceTcpconnection(int id1, int id2){
 
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 
@@ -75,7 +75,7 @@ public class Logs{
 		}
 	}
 
-	public synchronized void log_tcp_connection_from(int id1, int id2){
+	public synchronized void destinationTcpconnection(int id1, int id2){
 
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 
@@ -91,7 +91,7 @@ public class Logs{
 	}
 
 
-	public synchronized void log_change_of_preferred_neighbors(int id1, int[] id_list){
+	public synchronized void prefferedNeighbors(int id1, int[] id_list){
 
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 
@@ -121,7 +121,7 @@ public class Logs{
 
 	}
 
-	public synchronized void log_change_of_optimistically_unchoked_neighbor(int id1, int id2){
+	public synchronized void optimisticUnchoking(int id1, int id2){
 
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 
@@ -140,7 +140,7 @@ public class Logs{
 
 	}
 
-	public synchronized void log_unchoking(int id1, int id2){
+	public synchronized void Unchoking(int id1, int id2){
 
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 
@@ -156,7 +156,7 @@ public class Logs{
 
 	}
 
-	public synchronized void log_choking( int id1, int id2){
+	public synchronized void Choking( int id1, int id2){
 
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 
@@ -172,7 +172,7 @@ public class Logs{
 
 	}
 
-	public synchronized void log_send_have_message( int id1, int id2, int index){
+	public synchronized void haveMessage( int id1, int id2, int index){
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 		StringBuffer write_log = new StringBuffer();
 		write_log.append(timeStamp + " " + id1 +" sent 'have' message to " + id2+ " for the piece - " + index);
@@ -185,7 +185,7 @@ public class Logs{
 		}
 	}
 	
-	public synchronized void log_send_request_message( int id1, int id2, int index){
+	public synchronized void requestMessage( int id1, int id2, int index){
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 		StringBuffer write_log = new StringBuffer();
 		write_log.append(timeStamp + " " + id1 +" sent 'request' message to " + id2+ " for the piece - " + index);
@@ -198,7 +198,7 @@ public class Logs{
 		}
 	}
 	
-	public synchronized void log_send_piece_message( int id1, int id2, int index){
+	public synchronized void requestPiece( int id1, int id2, int index){
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 		StringBuffer write_log = new StringBuffer();
 		write_log.append(timeStamp + " " + id1 +" sent the 'piece' "+ index + " to " + id2);
@@ -211,7 +211,7 @@ public class Logs{
 		}
 	}
 	
-	public synchronized void log_send_interested_message( int id1, int id2){
+	public synchronized void interestedMessage(int id1, int id2){
 
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 
@@ -227,7 +227,7 @@ public class Logs{
 
 	}
 	
-	public synchronized void log_send_not_interested_message( int id1, int id2){
+	public synchronized void notInterestedmessage( int id1, int id2){
 
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 
@@ -243,7 +243,7 @@ public class Logs{
 
 	}
 	
-	public synchronized void log_receiving_have_message( int id1, int id2, int index){
+	public synchronized void receiveHavemessage( int id1, int id2, int index){
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 		StringBuffer write_log = new StringBuffer();
 		write_log.append(timeStamp + " " + id1 +" received 'have' message from " + id2+ " for the piece: " + index);
@@ -256,7 +256,7 @@ public class Logs{
 		}
 	}
 
-	public synchronized void log_receiving_interested_message( int id1, int id2){
+	public synchronized void receiveInterestedmessage( int id1, int id2){
 
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 
@@ -272,7 +272,7 @@ public class Logs{
 
 	}
 
-	public synchronized void log_receiving_not_interested_message( int id1, int id2){
+	public synchronized void receiveNotinterestedMessage( int id1, int id2){
 
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 
@@ -289,7 +289,7 @@ public class Logs{
 
 	}
 	
-	public synchronized void log_receiving_request_message( int id1, int id2,int index){
+	public synchronized void receiveRequestdmessage( int id1, int id2,int index){
 
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 
@@ -307,7 +307,7 @@ public class Logs{
 	}
 
 
-	public synchronized void log_downloading_a_piece( int id1, int id2, int index, int number_of_pieces){
+	public synchronized void getPiece( int id1, int id2, int index, int number_of_pieces){
 
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 
@@ -325,7 +325,7 @@ public class Logs{
 	}
 
 
-	public synchronized void log_completion_of_download(int id){
+	public synchronized void downloadComplete(int id){
 
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 
@@ -341,7 +341,7 @@ public class Logs{
 		}
 	}
 	
-	public synchronized void log_completion_of_process(){
+	public synchronized void killPeerprocess(){
 
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
 
