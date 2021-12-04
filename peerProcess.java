@@ -266,7 +266,7 @@ public class peerProcess {
 		public synchronized void sendPieceMsg(int pieceIndex) {
 			if((unchoked || (optimisticallyUnchokedPeer.get() == peerId)) && bitfieldHM.get(pieceIndex) == 1) {
 				try {
-					byte[] piece = utilObj.returnRequestPiece(sourcePeerId, pieceIndex);
+					byte[] piece = utilObj.returnPiece(sourcePeerId, pieceIndex);
 					ByteBuffer bb = ByteBuffer.allocate(4);
 					byte[] index = bb.putInt(pieceIndex).array();
 					byte[] payload = new byte[index.length+piece.length];
@@ -455,7 +455,7 @@ public class peerProcess {
 								for(int i=0;i<piece.length;i++) {
 									inputStream.read(piece, i, 1);
 								}
-								utilObj.writeReceivedPiece(sourcePeerId, indexOfPieceRecvd, piece);
+								utilObj.writePiece(sourcePeerId, indexOfPieceRecvd, piece);
 								boolean haveICompleted = true;
 								int numberOfPiecesIHave = 0;
 								for(Map.Entry<Integer, Integer> e:bitfieldHM.entrySet()) {
@@ -475,7 +475,7 @@ public class peerProcess {
 									complete_file = true;
 									logFileObj.downloadComplete(sourcePeerId);
 									TimeUnit.SECONDS.sleep(2);
-									utilObj.combinePiecesintoFile(peerId, configFileObj);
+									utilObj.joinChunksintoFile(sourcePeerId, configFileObj);
 									//broadcast 'bitfield' message to all the peers	so that they can update their bitfield copy of ur bitfield 			
 									//									for(Map.Entry<Integer, NeighborPeerInteraction> entry:neighborPeerConnections.entrySet()) {
 									//										NeighborPeerInteraction npiObjAdjacentPeer = entry.getValue();
@@ -599,7 +599,7 @@ public class peerProcess {
 								tempPeersList.remove(randomIdx);
 							}
 
-							logFileObj.prefferedNeighbors(sourcePeerId, preferredPeers);
+							logFileObj.preferredNeighbors(sourcePeerId, preferredPeers);
 
 							//choke the peers who have not been selected
 							Iterator<Integer> itr = tempPeersList.iterator();
@@ -782,7 +782,7 @@ public class peerProcess {
 	public static void main(String[] args) throws Exception {
 
 		sourcePeerId = Integer.parseInt(args[0]);
-		//Read Common.cfg and set the ConfigFile object
+		//Read Common.cfg and set the CommonConfig object
 
 		rfObj = ReadInput.getReadInputObj();
 		List<String> configRows = rfObj.parseInput("Common.cfg");
@@ -796,7 +796,7 @@ public class peerProcess {
 		setPeerNodes(peerRows);
 
 		//make peer directory
-		File logFile = utilObj.directoryForLogandPeer(sourcePeerId);
+		File logFile = utilObj.makePeerAndLogDirectory(sourcePeerId);
 		logFileObj = new Logs(logFile);
 		logFileObj.readCommoncfg(sourcePeerId, configFileObj);
 
@@ -807,8 +807,8 @@ public class peerProcess {
 			peersWithEntireFile.incrementAndGet(); //if I have the file initially
 			System.out.println(sourcePeerId +" (I) have the full file");
 			bit = 1;
-			utilObj.divideFileintoPieces(""+sourcePeerId, configFileObj);
-			utilObj.combinePiecesintoFile(sourcePeerId, configFileObj);
+			utilObj.splitFileintoChunks(""+sourcePeerId, configFileObj);
+			utilObj.joinChunksintoFile(sourcePeerId, configFileObj);
 		}
 
 		for(int i = 0;i<totalChunks;i++) {
