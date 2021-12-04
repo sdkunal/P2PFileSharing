@@ -1,4 +1,3 @@
-
 public class PeerConstants {
 
 	public static final String CONFIG_FILE = "Common.cfg";
