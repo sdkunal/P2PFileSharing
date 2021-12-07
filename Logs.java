@@ -356,6 +356,4 @@ public class Logs{
 		}catch(Exception e) {
 		}
 	}
-	
-
 }
